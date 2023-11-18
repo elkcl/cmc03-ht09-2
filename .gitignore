@@ -50,3 +50,7 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+build/
+smart-home-binary/
+smarthome-test-bin
