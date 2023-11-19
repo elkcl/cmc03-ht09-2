@@ -273,6 +273,14 @@ enum Commands
     TICK = 0x06
 };
 
+enum Params
+{
+    TEMPERATURE = 0x1,
+    HUMIDITY = 0x2,
+    ILLUMINATION = 0x4,
+    POLLUTION = 0x8
+};
+
 typedef uint16_t addr_t;
 typedef uint64_t val_t;
 
@@ -282,9 +290,12 @@ typedef struct
     uint8_t *str;
 } string;
 
+
 struct Trigger
 {
-    uint8_t op;
+    bool on;
+    bool more;
+    enum Params param; 
     val_t value;
     string name;
 };
@@ -426,7 +437,10 @@ decode_packet(const char *str, struct Packet *p)
             p->payload.dev_cmd_body.env_props.triggers =
                 calloc(t_len, sizeof(p->payload.dev_cmd_body.env_props.triggers[0]));
             for (size_t i = 0; i < t_len; ++i) {
-                p->payload.dev_cmd_body.env_props.triggers[i].op = ctx.buf[ctx.pos++];
+                uint8_t op = ctx.buf[ctx.pos++];
+                p->payload.dev_cmd_body.env_props.triggers[i].on = op & 1;
+                p->payload.dev_cmd_body.env_props.triggers[i].more = (op >> 1) & 1;
+                p->payload.dev_cmd_body.env_props.triggers[i].param = 1u << ((op >> 2) & 0b11);
                 if (!uleb128_decode(&ctx)) {
                     return false;
                 }
